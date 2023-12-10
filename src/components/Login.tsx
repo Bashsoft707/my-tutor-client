@@ -3,6 +3,8 @@ import { loginFields } from "../constants/formFields";
 import { FormAction } from "./FormAction";
 import { FormExtra } from "./FormExtra";
 import { Input } from "./Input";
+import { baseUrl } from "../constants/baseUrl";
+import axios from "axios";
 
 const fields = loginFields;
 let fieldsState: any = {};
@@ -15,13 +17,35 @@ export const Login = () => {
     setLoginState({ ...loginState, [e.target.id]: e.target.value });
   };
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-    authenticateUser();
-  };
 
-  //Handle Login API Integration here
-  const authenticateUser = () => {};
+    const { email, password } = loginState;
+
+    if (!email || !password) {
+      alert("Please fill in required data");
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${baseUrl}/login`, {
+        email,
+        password,
+      });
+
+      const { token, user } = response.data.data;
+
+      // Save token and user details to localStorage
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      window.location.href = "/main-page";
+    } catch (error) {
+      console.error("Login error:", error);
+
+      alert("Login failed. Please check your credentials and try again.");
+    }
+  };
 
   return (
     <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

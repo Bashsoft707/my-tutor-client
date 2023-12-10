@@ -2,6 +2,8 @@ import { useState } from "react";
 import { signupFields } from "../constants/formFields";
 import { FormAction } from "./FormAction";
 import { Input } from "./Input";
+import axios from "axios";
+import { baseUrl } from "../constants/baseUrl";
 
 const fields = signupFields;
 let fieldsState: any = {};
@@ -14,14 +16,29 @@ export const SignUp = () => {
   const handleChange = (e: { target: { id: any; value: any } }) =>
     setSignupState({ ...signupState, [e.target.id]: e.target.value });
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-    console.log(signupState);
-    createAccount();
-  };
 
-  //handle Signup API Integration here
-  const createAccount = () => {};
+    const { confirmPassword, email, password, username } = signupState;
+
+    if (!username || !email || !password || !confirmPassword) {
+      alert("Please fill in required data");
+    }
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+    }
+
+    const response = await axios.post(`${baseUrl}/register`, {
+      username,
+      email,
+      password,
+    });
+
+    console.log("data", response.data, response);
+    const data = response.data;
+    return data;
+  };
 
   return (
     <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
