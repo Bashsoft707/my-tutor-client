@@ -9,9 +9,9 @@ function App() {
       <div className="max-w-md w-full space-y-8">
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<LoginPage />} />
+            <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
-            <Route path="/main-page" element={<MainPage />} />
+            <Route path="/" element={<MainPage />} />
           </Routes>
         </BrowserRouter>
       </div>

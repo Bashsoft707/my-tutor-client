@@ -4,3 +4,6 @@ export { FormExtra } from "./FormExtra";
 export { Input } from "./Input";
 export { Login } from "./Login";
 export { SignUp } from "./SignUp";
+export { MainLayout } from "./MainLayout";
+export { SideNav } from "./SideNav";
+export { TopNav } from "./TopNav";
