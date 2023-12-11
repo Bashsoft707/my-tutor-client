@@ -39,7 +39,7 @@ export const Login = () => {
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      window.location.href = "/main-page";
+      window.location.href = "/";
     } catch (error) {
       console.error("Login error:", error);
 
