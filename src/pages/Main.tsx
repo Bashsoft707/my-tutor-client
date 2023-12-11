@@ -298,9 +298,6 @@ export const MainPage = () => {
                 </svg>
               </span>
             </div>
-            <small className=" text-slate-500 mt-2">
-              AI can generate incorrect information.
-            </small>
           </div>
         </div>
       </div>
