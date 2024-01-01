@@ -7,3 +7,6 @@ export { SignUp } from "./SignUp";
 export { MainLayout } from "./MainLayout";
 export { SideNav } from "./SideNav";
 export { TopNav } from "./TopNav";
+export { CreateProfileModal } from "./Modals/CreateProfile";
+export { Modal } from "./Modals/Modal";
+export { LoadingSpinner } from "./LoadingSpinner";

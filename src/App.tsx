@@ -5,8 +5,8 @@ import { LoginPage, MainPage, SignupPage } from "./pages";
 
 function App() {
   return (
-    <div className="min-h-full h-screen">
-      <div className="max-w-md w-full space-y-8">
+    // <div className="min-h-full h-screen">
+    //   <div className="max-w-md w-full space-y-8">
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
@@ -14,8 +14,8 @@ function App() {
             <Route path="/" element={<MainPage />} />
           </Routes>
         </BrowserRouter>
-      </div>
-    </div>
+    //   </div>
+    // </div>
   );
 }
 
