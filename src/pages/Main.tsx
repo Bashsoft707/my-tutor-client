@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { BiPlus, BiComment, BiUser, BiFace, BiSend } from "react-icons/bi";
 import "./Main.css";
-import { CreateProfileModal, Modal } from "../components";
+import { CreateProfileModal, Modal, QuizModal } from "../components";
 import Select from "react-select";
 import axios from "axios";
 import { baseUrl } from "../constants/baseUrl";
@@ -16,6 +16,7 @@ export function MainPage() {
   const [isCreateProfileModalOpen, setIsCreateProfileModalOpen] =
     useState<boolean>(false);
   const [openModal, setOpenModal] = useState<boolean>(false);
+  const [openQuizModal, setOpenQuizModal] = useState<boolean>(false);
   const [course, setCourse] = useState("");
   const [dataSets, setDataSets] = useState([]);
   const scrollToLastItem: any = useRef(null);
@@ -65,10 +66,10 @@ export function MainPage() {
 
       const message = {
         content: response.answer,
-        role: "user"
-      }
+        role: "user",
+      };
 
-      console.log("message", message)
+      console.log("message", message);
 
       if (!response) {
         setErrorText("Error in responding to sent text");
@@ -125,21 +126,6 @@ export function MainPage() {
     }
   }, [message, currentTitle]);
 
-  // useEffect(() => {
-  //   const getData = async () => {
-  //     const response = await axios.get(`${baseUrl}/get-datasets`);
-  //     const data = response.data;
-  //     setDataSets(
-  //       data[course.toLocaleLowerCase()][
-  //         user.profile?.knowledgeLevel?.toLocaleLowerCase()
-  //       ]
-  //     );
-  //     console.log("data", data, response);
-  //     console.log("data sets", dataSets);
-  //   };
-  //   getData();
-  // }, [course]);
-
   useEffect(() => {
     const getData = async () => {
       const response = await axios.get(`${baseUrl}/get-datasets`);
@@ -189,6 +175,14 @@ export function MainPage() {
           onClose={() => setIsCreateProfileModalOpen(false)}
         />
       )}
+
+      {openQuizModal && (
+        <QuizModal
+          isOpen={openQuizModal}
+          onClose={() => setOpenQuizModal(false)}
+          questions={dataSets}
+        />
+      )}
       <div className="container">
         <section className="sidebar">
           <div className="sidebar-header" onClick={createNewChat} role="button">
@@ -205,6 +199,13 @@ export function MainPage() {
                 </li>
               ))}
             </ul>
+          </div>
+          <div
+            className="sidebar-header"
+            onClick={() => setOpenQuizModal(!openQuizModal)}
+            role="button"
+          >
+            <button className="capitalize text-center">take quiz</button>
           </div>
           <div className="sidebar-info">
             <div className="sidebar-info-upgrade">
@@ -253,6 +254,7 @@ export function MainPage() {
                     <div
                       className=" text-lg font-light mt-3 p-3 border rounded cursor-pointer min-w-[400px] hover:bg-slate-800"
                       onClick={() => setText(data.question)}
+                      key={index}
                     >
                       {data.question}
                     </div>
