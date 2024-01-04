@@ -200,12 +200,16 @@ export function MainPage() {
               ))}
             </ul>
           </div>
-          <div
-            className="sidebar-header"
-            onClick={() => setOpenQuizModal(!openQuizModal)}
-            role="button"
-          >
-            <button className="capitalize text-center">take quiz</button>
+          <div className="sidebar-header" role="button">
+            <button
+              className="capitalize text-center cursor-pointer w-full"
+              disabled={
+                dataSets.length === 0 || dataSets.length > uniqueTitles.length
+              }
+              onClick={() => setOpenQuizModal(!openQuizModal)}
+            >
+              take quiz
+            </button>
           </div>
           <div className="sidebar-info">
             <div className="sidebar-info-upgrade">
@@ -225,18 +229,16 @@ export function MainPage() {
 
         <section className="main">
           <div className="flex items-center gap-1">
-            <div className="interests">
+            <div className="interests ">
               <Select
-                className="z-[99] border border-[#9ba5ae] rounded-md focus:border-[#277d42] outline-none ring-0"
-                //  classNamePrefix="select"
                 isClearable={true}
                 placeholder="Select interests..."
                 name="Ineterest"
                 options={interests}
                 value={interests.find(
-                  (opt: { value: string }) => opt.value === course
+                  (opt: { value: string }) => opt?.value === course
                 )}
-                onChange={(e) => setCourse(e.value)}
+                onChange={(e) => setCourse(e?.value)}
               />
             </div>
             <div className="knowledge-level p-1.5 border-2 rounded border-slate-200">
