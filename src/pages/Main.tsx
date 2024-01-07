@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { BiPlus, BiComment, BiUser, BiFace, BiSend } from "react-icons/bi";
 import "./Main.css";
-import { CreateProfileModal, Modal, QuizModal } from "../components";
+import { CreateProfileModal, Modal, QuizModal, UserProfile } from "../components";
 import Select from "react-select";
 import axios from "axios";
 import { baseUrl } from "../constants/baseUrl";
@@ -183,6 +183,7 @@ export function MainPage() {
           questions={dataSets}
         />
       )}
+
       <div className="container">
         <section className="sidebar">
           <div className="sidebar-header" onClick={createNewChat} role="button">

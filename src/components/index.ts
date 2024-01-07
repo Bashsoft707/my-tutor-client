@@ -11,3 +11,4 @@ export { CreateProfileModal } from "./Modals/CreateProfile";
 export { Modal } from "./Modals/Modal";
 export { LoadingSpinner } from "./LoadingSpinner";
 export { QuizModal } from "./Modals/QuizModal";
+export { UserProfile } from "./Profile";
