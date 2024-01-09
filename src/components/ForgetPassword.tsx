@@ -12,7 +12,7 @@ const fields = loginFields;
 let fieldsState: any = {};
 fields.forEach((field: any) => (fieldsState[field.id] = ""));
 
-export const Login = () => {
+export const ForgetPassword = () => {
   const [loginState, setLoginState] = useState(fieldsState);
   const [loading, setLoading] = useState(false);
 
@@ -24,29 +24,21 @@ export const Login = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { email, password } = loginState;
+    const { email } = loginState;
 
-    if (!email || !password) {
+    if (!email) {
       toast.error("Please fill in required data");
       return;
     }
 
     try {
-      const response = await axios.post(`${baseUrl}/login`, {
+      const response = await axios.post(`${baseUrl}/password/reset`, {
         email,
-        password,
       });
 
-      const { token, user } = response.data.data;
-
-      if (user && token) {
-        // Save token and user details to localStorage
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(user));
-        toast.success("Signup successful");
+      if (response.data.data) {
+        toast.success("Email sent to user email");
         setLoading(false);
-
-        window.location.href = "/";
       }
     } catch (err: any) {
       console.log(err);
@@ -87,13 +79,23 @@ export const Login = () => {
             )
           )}
         </div>
-        <FormExtra />
-        <FormAction
-          handleSubmit={handleSubmit}
-          text="Login"
-          loading={loading}
-        />
-      </form>{" "}
+        <div className="flex items-center gap-5">
+          <FormAction
+            handleSubmit={handleSubmit}
+            text="Reset Password"
+            loading={loading}
+          />
+          <button
+            className="text-purple-600 w-full flex justify-center py-2 px-4 border border-purple-600 text-sm font-medium rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 mt-10"
+            onClick={(e) => {
+              e.preventDefault();
+              window.location.href = "/login";
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
     </>
   );
 };

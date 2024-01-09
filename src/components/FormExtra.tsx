@@ -18,7 +18,7 @@ export const FormExtra = () => {
 
       <div className="text-sm">
         <a
-          href="#forget-password"
+          href="/forget-password"
           className="font-medium text-purple-600 hover:text-purple-500"
         >
           Forgot your password?

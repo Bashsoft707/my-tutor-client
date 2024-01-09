@@ -12,3 +12,4 @@ export { Modal } from "./Modals/Modal";
 export { LoadingSpinner } from "./LoadingSpinner";
 export { QuizModal } from "./Modals/QuizModal";
 export { UserProfile } from "./Profile";
+export { ForgetPassword } from "./ForgetPassword";
