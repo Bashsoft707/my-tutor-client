@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { BiPlus, BiComment, BiUser, BiFace, BiSend } from "react-icons/bi";
 import "./Main.css";
-import { CreateProfileModal, Modal, QuizModal, UserProfile } from "../components";
+import { CreateProfileModal, Modal, QuizModal } from "../components";
 import Select from "react-select";
 import axios from "axios";
 import { baseUrl } from "../constants/baseUrl";
@@ -17,10 +17,13 @@ export function MainPage() {
     useState<boolean>(false);
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [openQuizModal, setOpenQuizModal] = useState<boolean>(false);
+  const [expiredTokenModal, setExpiredTokenModal] = useState(false);
   const [course, setCourse] = useState("");
   const [dataSets, setDataSets] = useState([]);
   const scrollToLastItem: any = useRef(null);
   const user = JSON.parse(localStorage.getItem("user") as string);
+  const token = localStorage.getItem("token");
+  const [userProfile, setUserProfile] = useState<any>(user?.profile);
 
   const createNewChat = () => {
     setMessage(null);
@@ -97,11 +100,40 @@ export function MainPage() {
   };
 
   useEffect(() => {
-    if (!user?.profile) {
-      // If the user does not have a profile, open the CreateProfileModal
+    const getUserProfile = async () => {
+      try {
+        console.log("make request");
+        const response = await axios.get(`${baseUrl}/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        console.log("response", response.data, response.data.message);
+
+        if (
+          response.data.statusCode === 500 ||
+          response.data.message === "jwt expired"
+        ) {
+          setExpiredTokenModal(true);
+          return;
+        }
+
+        const { data } = response.data;
+        setUserProfile(data);
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+
+    getUserProfile();
+  }, []);
+
+  useEffect(() => {
+    if (!userProfile) {
       setIsCreateProfileModalOpen(true);
     }
-  }, []);
+  }, [userProfile]);
 
   useEffect(() => {
     if (!currentTitle && text && message) {
@@ -131,17 +163,13 @@ export function MainPage() {
       const response = await axios.get(`${baseUrl}/get-datasets`);
       const data = response.data;
 
-      const fieldData = getFieldData(
-        data,
-        course,
-        user.profile?.knowledgeLevel
-      );
+      const fieldData = getFieldData(data, course, userProfile?.knowledgeLevel);
 
       setDataSets(fieldData);
     };
 
     getData();
-  }, [course, user.profile?.knowledgeLevel]);
+  }, [course, userProfile?.knowledgeLevel]);
 
   const getFieldData = (
     data: Record<string, Record<string, any>>,
@@ -167,6 +195,12 @@ export function MainPage() {
     value: interest.toLocaleLowerCase(),
   }));
 
+  const openQuiz = () => {
+    if (dataSets.length > 0 && dataSets.length <= uniqueTitles.length) {
+      setOpenQuizModal(true);
+    }
+  };
+
   return (
     <>
       {isCreateProfileModalOpen && (
@@ -183,6 +217,8 @@ export function MainPage() {
           questions={dataSets}
         />
       )}
+
+      {expiredTokenModal && <ExpiredJwtModal isOpen={expiredTokenModal} />}
 
       <div className="container">
         <section className="sidebar">
@@ -207,16 +243,12 @@ export function MainPage() {
               disabled={
                 dataSets.length === 0 || dataSets.length > uniqueTitles.length
               }
-              onClick={() => setOpenQuizModal(!openQuizModal)}
+              onClick={openQuiz}
             >
               take quiz
             </button>
           </div>
           <div className="sidebar-info">
-            <div className="sidebar-info-upgrade">
-              <BiUser />
-              <p>Upgrade to Plus</p>
-            </div>
             {openModal && <Modal />}
             <div
               className="sidebar-info-user"
@@ -244,11 +276,10 @@ export function MainPage() {
             </div>
             <div className="knowledge-level p-1.5 border-2 rounded border-slate-200">
               <h3 className="capitalize font-semibold">
-                {user.profile?.knowledgeLevel}
+                {userProfile?.knowledgeLevel}
               </h3>
             </div>
           </div>
-
           {!currentTitle &&
             (dataSets ? (
               <div className=" h-[80%] flex flex-col justify-center items-center text-white">
@@ -327,260 +358,42 @@ export function MainPage() {
   );
 }
 
-// import axios from "axios";
-// import React, { useState } from "react";
-
-// const examples = [
-//   "How to use Tailwind CSS",
-//   "How to use Tailwind CSS with React",
-//   "How to use Tailwind CSS with Next.js",
-//   "How to use Tailwind CSS with Gatsby",
-//   "How to use Tailwind CSS with Svelte",
-//   "How to use Tailwind CSS with Vue",
-//   "How to use Tailwind CSS with Angular",
-//   "How to use Tailwind CSS with Ember",
-// ];
-
-// export const MainPage = () => {
-//   const [chat, setChat] = useState<any>([]);
-//   const [chatHistory, setChatHistory] = useState<any>([]);
-//   const [title, setTitle] = useState<any>("");
-//   const [input, setInput] = useState<any>("");
-
-//   const handleSend = async () => {
-//     if (input.trim()) {
-//       setChat([...chat, { role: "user", content: input }]);
-//       setInput("");
-//       const response: any = await fetch("http://localhost:8000/api/chat", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({
-//           messages: [...chat, { role: "user", content: input }],
-//         }),
-//       });
-
-//       //eslint-disable-next-line
-//       const readData = response?.body
-//         .pipeThrough(new TextDecoderStream())
-//         .getReader();
-//       let aiRes = "";
-//       while (true) {
-//         const { done, value } = await readData.read();
-//         if (done) {
-//           break;
-//         }
-//         aiRes += value;
-//         setChat([
-//           ...chat,
-//           { role: "user", content: input },
-//           { role: "assistant", content: aiRes },
-//         ]);
-//       }
-
-//       if (!title) {
-//         const createTitle = await axios.post("http://localhost:8000/api/title", {
-//             title: input
-//         });
-
-//         console.log("create title", createTitle)
-
-//         const title = await createTitle.data;
-//         setTitle(title?.title);
-//         setChatHistory([...chatHistory, title]);
-//       }
-//     }
-//   };
-
-//   return (
-//     <div className=" h-screen w-screen flex bg-[#050509]">
-//       <div className=" w-[20%] h-screen bg-[#0c0c15] text-white p-4">
-//         <div className=" h-[5%]">
-//           <button
-//             className=" w-full h-[50px] border rounded hover:bg-slate-600"
-//             onClick={() => {
-//               setChat([]);
-//               setTitle("");
-//             }}
-//           >
-//             New Chat
-//           </button>
-//         </div>
-//         <div className=" h-[70%]  shadow-lg hide-scroll-bar mb-4">
-//           {chatHistory.map((item: any, index: any) => (
-//             <div className=" py-3 text-center rounded mt-4 text-lg font-light flex items-center px-8 hover:bg-slate-600 cursor-pointer">
-//               <span className=" mr-4">
-//                 <svg
-//                   xmlns="http://www.w3.org/2000/svg"
-//                   className="icon icon-tabler icon-tabler-message"
-//                   width="24"
-//                   height="24"
-//                   viewBox="0 0 24 24"
-//                   stroke-width="2"
-//                   stroke="currentColor"
-//                   fill="none"
-//                   stroke-linecap="round"
-//                   stroke-linejoin="round"
-//                 >
-//                   <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-//                   <path d="M8 9h8"></path>
-//                   <path d="M8 13h6"></path>
-//                   <path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z"></path>
-//                 </svg>
-//               </span>
-//               <span className=" text-left">{item.title}</span>
-//             </div>
-//           ))}
-//         </div>
-//         <div className=" shadow-lg hide-scroll-bar h-[20%] border-t">
-//           {[1].map((item, index) => (
-//             <div className=" py-3 text-center rounded mt-4 text-lg font-light flex items-center px-8 hover:bg-slate-600 cursor-pointer">
-//               <span className=" mr-4">
-//                 <svg
-//                   xmlns="http://www.w3.org/2000/svg"
-//                   className="icon icon-tabler icon-tabler-settings-code"
-//                   width="24"
-//                   height="24"
-//                   viewBox="0 0 24 24"
-//                   stroke-width="2"
-//                   stroke="currentColor"
-//                   fill="none"
-//                   stroke-linecap="round"
-//                   stroke-linejoin="round"
-//                 >
-//                   <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-//                   <path d="M11.482 20.924a1.666 1.666 0 0 1 -1.157 -1.241a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.312 .318 1.644 1.794 .995 2.697"></path>
-//                   <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path>
-//                   <path d="M20 21l2 -2l-2 -2"></path>
-//                   <path d="M17 17l-2 2l2 2"></path>
-//                 </svg>
-//               </span>
-//               Settings
-//             </div>
-//           ))}
-//         </div>
-//       </div>
-//       <div className=" w-[80%]">
-//         {chat.length > 0 ? (
-//           <div className=" h-[80%]  hide-scroll-bar pt-8">
-//             {chat.map((item: any, index: any) => (
-//               <div
-//                 className={` w-[60%] mx-auto p-6 text-white flex ${
-//                   item.role === "assistant" && "bg-slate-900 rounded"
-//                 }`}
-//               >
-//                 <span className=" mr-8 p-2 bg-slate-500 text-white rounded-full h-full ">
-//                   {item.role === "user" ? (
-//                     <svg
-//                       xmlns="http://www.w3.org/2000/svg"
-//                       className="icon icon-tabler icon-tabler-user-bolt"
-//                       width="24"
-//                       height="24"
-//                       viewBox="0 0 24 24"
-//                       stroke-width="2"
-//                       stroke="currentColor"
-//                       fill="none"
-//                       stroke-linecap="round"
-//                       stroke-linejoin="round"
-//                     >
-//                       <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-//                       <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"></path>
-//                       <path d="M6 21v-2a4 4 0 0 1 4 -4h4c.267 0 .529 .026 .781 .076"></path>
-//                       <path d="M19 16l-2 3h4l-2 3"></path>
-//                     </svg>
-//                   ) : (
-//                     <svg
-//                       xmlns="http://www.w3.org/2000/svg"
-//                       className="icon icon-tabler icon-tabler-robot"
-//                       width="24"
-//                       height="24"
-//                       viewBox="0 0 24 24"
-//                       stroke-width="2"
-//                       stroke="currentColor"
-//                       fill="none"
-//                       stroke-linecap="round"
-//                       stroke-linejoin="round"
-//                     >
-//                       <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-//                       <path d="M7 7h10a2 2 0 0 1 2 2v1l1 1v3l-1 1v3a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-3l-1 -1v-3l1 -1v-1a2 2 0 0 1 2 -2z"></path>
-//                       <path d="M10 16h4"></path>
-//                       <circle
-//                         cx="8.5"
-//                         cy="11.5"
-//                         r=".5"
-//                         fill="currentColor"
-//                       ></circle>
-//                       <circle
-//                         cx="15.5"
-//                         cy="11.5"
-//                         r=".5"
-//                         fill="currentColor"
-//                       ></circle>
-//                       <path d="M9 7l-1 -4"></path>
-//                       <path d="M15 7l1 -4"></path>
-//                     </svg>
-//                   )}
-//                 </span>
-//                 <div
-//                   className=" leading-loose"
-//                   style={{ whiteSpace: "break-spaces" }}
-//                 >
-//                   {item.content}
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-//         ) : (
-//           <div className=" h-[80%] flex flex-col justify-center items-center text-white">
-//             <div className=" text-4xl font-bold mb-8 text-capitalize">my tutor</div>
-//             <div className=" flex flex-wrap justify-around max-w-[900px]">
-//               {examples.map((item, index) => (
-//                 <div
-//                   className=" text-lg font-light mt-4 p-4 border rounded cursor-pointer min-w-[400px] hover:bg-slate-800"
-//                   onClick={() => setInput(item)}
-//                 >
-//                   {item}
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-//         )}
-//         <div className=" h-[20%]">
-//           <div className=" flex flex-col items-center justify-center w-full h-full text-white">
-//             <div className=" w-[60%] flex justify-center relative">
-//               <input
-//                 type="text"
-//                 onChange={(e) => setInput(e.target.value)}
-//                 value={input}
-//                 className=" w-full rounded-lg p-4 pr-16 bg-slate-800 text-white"
-//                 placeholder="Type your message here..."
-//               />
-//               <span
-//                 className=" absolute right-4 top-4 cursor-pointer"
-//                 onClick={() => (input.trim() ? handleSend() : undefined)}
-//               >
-//                 <svg
-//                   xmlns="http://www.w3.org/2000/svg"
-//                   className="icon icon-tabler icon-tabler-send"
-//                   width="24"
-//                   height="24"
-//                   viewBox="0 0 24 24"
-//                   stroke-width="2"
-//                   stroke="currentColor"
-//                   fill="none"
-//                   stroke-linecap="round"
-//                   stroke-linejoin="round"
-//                 >
-//                   <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-//                   <path d="M10 14l11 -11"></path>
-//                   <path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"></path>
-//                 </svg>
-//               </span>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
+const ExpiredJwtModal = ({ isOpen }: any) => {
+  return (
+    <div
+      className={`fixed inset-0 overflow-y-auto ${
+        isOpen ? "visible" : "hidden"
+      }`}
+    >
+      <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+        <span
+          className="hidden sm:inline-block sm:align-middle sm:h-screen"
+          aria-hidden="true"
+        >
+          &#8203;
+        </span>
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+              <h3 className="text-lg leading-8 mb-3 font-medium text-gray-900">
+                This session has expired, login again
+              </h3>
+              <button
+                className="bg-[#343541] border-none text-white w-[100%] p-3 cursor-pointer"
+                onClick={() => {
+                  localStorage.clear();
+                  window.location.href = "/login";
+                }}
+              >
+                Login
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
