@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { BiPlus, BiComment, BiUser, BiFace, BiSend } from "react-icons/bi";
 import "./Main.css";
-import { CreateProfileModal, Modal, QuizModal } from "../components";
+import {
+  CreateProfileModal,
+  LoadingSpinner,
+  Modal,
+  QuizModal,
+} from "../components";
 import Select from "react-select";
 import axios from "axios";
 import { baseUrl } from "../constants/baseUrl";
@@ -24,6 +29,7 @@ export function MainPage() {
   const user = JSON.parse(localStorage.getItem("user") as string);
   const token = localStorage.getItem("token");
   const [userProfile, setUserProfile] = useState<any>(user?.profile);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
   const createNewChat = () => {
     setMessage(null);
@@ -102,14 +108,11 @@ export function MainPage() {
   useEffect(() => {
     const getUserProfile = async () => {
       try {
-        console.log("make request");
         const response = await axios.get(`${baseUrl}/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-
-        console.log("response", response.data, response.data.message);
 
         if (
           response.data.statusCode === 500 ||
@@ -123,17 +126,21 @@ export function MainPage() {
         setUserProfile(data);
       } catch (error) {
         console.error("Error fetching user profile:", error);
+      } finally {
+        setIsLoadingProfile(false);
       }
     };
 
     getUserProfile();
   }, []);
 
+  console.log("user profile", userProfile)
+
   useEffect(() => {
-    if (!userProfile) {
+    if (!isLoadingProfile && !userProfile) {
       setIsCreateProfileModalOpen(true);
     }
-  }, [userProfile]);
+  }, [userProfile, isLoadingProfile]);
 
   useEffect(() => {
     if (!currentTitle && text && message) {
@@ -190,7 +197,7 @@ export function MainPage() {
     new Set(previousChats.map((prevChat: any) => prevChat.title).reverse())
   );
 
-  const interests = user.profile?.interests.map((interest: string) => ({
+  const interests = userProfile?.interests.map((interest: string) => ({
     label: interest.toLocaleUpperCase(),
     value: interest.toLocaleLowerCase(),
   }));
@@ -203,7 +210,15 @@ export function MainPage() {
 
   return (
     <>
-      {isCreateProfileModalOpen && (
+      {isLoadingProfile && (
+        <div className="z-50 w-screen h-screen fixed bg-gray-700 opacity-75 flex">
+          <div className="my-auto mx-auto">
+              <LoadingSpinner />
+          </div>
+        
+        </div>
+      )}
+      {isCreateProfileModalOpen && !isLoadingProfile && (
         <CreateProfileModal
           isOpen={isCreateProfileModalOpen}
           onClose={() => setIsCreateProfileModalOpen(false)}
@@ -249,7 +264,7 @@ export function MainPage() {
             </button>
           </div>
           <div className="sidebar-info">
-            {openModal && <Modal />}
+            {openModal && <Modal profile={userProfile} />}
             <div
               className="sidebar-info-user"
               onClick={() => setOpenModal(!openModal)}
@@ -268,7 +283,7 @@ export function MainPage() {
                 placeholder="Select interests..."
                 name="Ineterest"
                 options={interests}
-                value={interests.find(
+                value={interests?.find(
                   (opt: { value: string }) => opt?.value === course
                 )}
                 onChange={(e) => setCourse(e?.value)}

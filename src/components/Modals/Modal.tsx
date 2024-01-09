@@ -2,8 +2,9 @@ import { MdOutlineLogout } from "react-icons/md";
 import { CiSettings } from "react-icons/ci";
 import { useState } from "react";
 import { UserProfile } from "../Profile";
+import { CreateProfileModal } from "./CreateProfile";
 
-export const Modal = () => {
+export const Modal = ({ profile }: any) => {
   const [openUserProfileModal, setOpenUserProfileModal] = useState(false);
   const logout = () => {
     localStorage.clear();
@@ -12,8 +13,13 @@ export const Modal = () => {
 
   return (
     <>
-      {openUserProfileModal && (
+      {openUserProfileModal && profile ? (
         <UserProfile
+          isOpen={openUserProfileModal}
+          onClose={() => setOpenUserProfileModal(false)}
+        />
+      ) : (
+        <CreateProfileModal
           isOpen={openUserProfileModal}
           onClose={() => setOpenUserProfileModal(false)}
         />
